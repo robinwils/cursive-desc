@@ -1,0 +1,11 @@
+[package]
+name = "cursive-xml"
+version = "0.1.0"
+authors = ["Robin Wils <rwils@mail.corp.sentryo.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+serde = { version = "1.0", features = [ "derive" ] }
+quick-xml = { version = "0.17", features = [ "serialize" ] }
+cursive = "*"
