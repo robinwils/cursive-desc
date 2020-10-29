@@ -1,0 +1,4 @@
+[package]
+name = "cursive-xml-examples"
+license = "MIT"
+version = "0.1.0"
