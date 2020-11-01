@@ -1,4 +1,9 @@
 [package]
-name = "cursive-xml-examples"
-license = "MIT"
+name = "cursive_desc_examples"
 version = "0.1.0"
+authors = ["Robin Wils <rwils@mail.corp.sentryo.net>"]
+edition = "2018"
+
+[dependencies]
+cursive_desc = { path = ".." }
+cursive = "*"

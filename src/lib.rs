@@ -1,5 +1,5 @@
-use quick_xml::Reader;
 use cursive::views::ScreensView;
+use cursive::View;
 
 #[cfg(test)]
 mod tests {
@@ -15,9 +15,11 @@ mod tests {
     }
 }
 
-mod parser;
 mod error;
+pub mod parser;
 mod utils;
+
+extern crate serde;
 
 macro_rules! hashmap {
     ($( $key: expr => $val: expr ),*) => {{
@@ -27,12 +29,10 @@ macro_rules! hashmap {
     }}
 }
 
-pub fn from_str(s: & str) -> Result<ScreensView, error::Error> {
-    let mut reader = Reader::from_str(s);
-    reader.trim_text(true);
-    let parser: parser::Parser<&[u8]> = parser::Parser::new(reader);
+pub fn from_str(s: &str) -> Result<impl View, error::Error> {
+    let parser: parser::Parser = parser::Parser::new();
 
-    let screens_view = parser.parse();
+    let main_view = parser.parse(s);
 
-    screens_view
+    main_view
 }

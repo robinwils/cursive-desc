@@ -1,15 +1,17 @@
+use serde_json::Error as JsonError;
+
 #[derive(Debug)]
 pub enum Error {
-    Xml(quick_xml::Error),
+    Json(JsonError),
     ParseStrError,
     UnknownAttr,
-    Other(&'static str)
+    Other(&'static str),
 }
 
-impl From<quick_xml::Error> for Error {
+impl From<JsonError> for Error {
     /// Creates a new `Error::DeXml` from the given error
     #[inline]
-    fn from(error: quick_xml::Error) -> Error {
-        Error::Xml(error)
+    fn from(error: serde_json::Error) -> Error {
+        Error::Json(error)
     }
 }
