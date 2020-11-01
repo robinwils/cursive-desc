@@ -1,5 +1,6 @@
 use crate::error::Error;
 use crate::utils::*;
+use cursive::direction::Orientation;
 use cursive::views::*;
 use cursive::View;
 use serde::*;
@@ -7,36 +8,83 @@ use serde::*;
 #[derive(Deserialize, Debug)]
 #[serde(tag = "view")]
 pub enum JView {
-    TextView { content: String, effect: String },
+    TextView {
+        content: String,
+        effect: Option<String>,
+    },
+    LinearLayout {
+        orientation: JOrientation,
+        children: Vec<JView>,
+    },
 }
 
-pub struct Parser {
-    root_view: ScreensView<BoxedView>,
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum JOrientation {
+    Horizontal,
+    Vertical,
 }
+
+impl Into<Orientation> for JOrientation {
+    #[inline]
+    fn into(self) -> Orientation {
+        match self {
+            JOrientation::Horizontal => Orientation::Horizontal,
+            JOrientation::Vertical => Orientation::Vertical,
+        }
+    }
+}
+
+pub struct Parser {}
 
 impl Parser {
     pub fn new() -> Self {
-        Self {
-            root_view: ScreensView::new(),
-        }
+        Self {}
     }
 
-    fn new_text_view(content: String, effect: String) -> Result<impl View, Error> {
+    fn new_text_view(content: String, effect: Option<String>) -> Result<BoxedView, Error> {
+        println!("Creating TextView: {}, {:?}", content, effect);
         let mut text_view = TextView::empty();
 
         text_view.set_content(content);
-        text_view.set_effect(effect_from_str(effect.as_str()).expect("cannot convert to effect"));
+        if let Some(estring) = effect {
+            text_view
+                .set_effect(effect_from_str(estring.as_str()).expect("cannot convert to effect"));
+        }
 
         Ok(BoxedView::boxed(text_view))
     }
 
-    pub fn from_jview(jview: JView) -> Result<impl View, Error> {
+    fn new_linear_layout(
+        orientation: JOrientation,
+        children: Vec<JView>,
+    ) -> Result<BoxedView, Error> {
+        println!(
+            "Creating LinearLayout: {:?}, {}",
+            orientation,
+            children.len()
+        );
+        let mut llayout = LinearLayout::new(orientation.into());
+
+        for child in children {
+            llayout
+                .add_child(Self::from_jview(child).expect("cannot parse linear layout children"));
+        }
+
+        Ok(BoxedView::boxed(llayout))
+    }
+
+    pub fn from_jview(jview: JView) -> Result<BoxedView, Error> {
         match jview {
             JView::TextView { content, effect } => Self::new_text_view(content, effect),
+            JView::LinearLayout {
+                orientation,
+                children,
+            } => Self::new_linear_layout(orientation, children),
         }
     }
 
-    pub fn parse(mut self, s: &str) -> Result<impl View, Error> {
+    pub fn parse(self, s: &str) -> Result<BoxedView, Error> {
         let doc: JView = serde_json::from_str(s)?;
 
         println!("Json deserialized: {:?}", doc);

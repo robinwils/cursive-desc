@@ -1,4 +1,4 @@
-use cursive::views::ScreensView;
+use cursive::views::BoxedView;
 use cursive::View;
 
 #[cfg(test)]
@@ -29,7 +29,7 @@ macro_rules! hashmap {
     }}
 }
 
-pub fn from_str(s: &str) -> Result<impl View, error::Error> {
+pub fn from_str(s: &str) -> Result<BoxedView, error::Error> {
     let parser: parser::Parser = parser::Parser::new();
 
     let main_view = parser.parse(s);
