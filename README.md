@@ -1,8 +1,9 @@
 # cursive-desc
 JSON description frontend for the cursive library
 
-Look at the examples on how to use
+Examples dir will show you some sample code.
 
+Simple TextView:
 ```
 use cursive::Cursive;
 use cursive_desc::from_str;
