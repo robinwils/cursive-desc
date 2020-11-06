@@ -1,0 +1,16 @@
+[package]
+name = "cursive_callback_macro"
+version = "0.1.0"
+authors = ["Robin Wils <robin.wilz@gmail.com>"]
+edition = "2018"
+
+
+[lib]
+name = "cursive_callback_macro"
+proc-macro = true
+
+[dependencies]
+quote = "1.0"
+syn = { version = "1.0.33", features = ["visit"] }
+cursive_callback = { path = "../cursive_callback" }
+proc-macro2 = "1.0"

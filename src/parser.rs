@@ -16,6 +16,9 @@ pub enum JView {
         orientation: JOrientation,
         children: Vec<JView>,
     },
+    Button {
+        label: String,
+    },
 }
 
 #[derive(Deserialize, Debug)]
@@ -74,6 +77,10 @@ impl Parser {
         Ok(BoxedView::boxed(llayout))
     }
 
+    fn new_button(label: String) -> Result<BoxedView, Error> {
+        Ok(BoxedView::boxed(DummyView))
+    }
+
     pub fn from_jview(jview: JView) -> Result<BoxedView, Error> {
         match jview {
             JView::TextView { content, effect } => Self::new_text_view(content, effect),
@@ -81,6 +88,7 @@ impl Parser {
                 orientation,
                 children,
             } => Self::new_linear_layout(orientation, children),
+            JView::Button { label } => Self::new_button(label),
         }
     }
 

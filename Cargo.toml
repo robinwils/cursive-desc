@@ -5,10 +5,11 @@ authors = ["Robin Wils <rwils@mail.corp.sentryo.net>"]
 edition = "2018"
 
 [workspace]
-members = [ "examples" ]
+members = [ "examples", "cursive_callback_macro" ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
+cursive_callback_macro = { path = "cursive_callback_macro" }
 serde = { version = "1.0", features = [ "derive"] }
 serde_json = "*"
 cursive = "*"
