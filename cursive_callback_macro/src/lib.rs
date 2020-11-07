@@ -5,7 +5,9 @@ use proc_macro2::Span;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::{braced, parse_macro_input, token, Field, Ident, Result, Token};
+use syn::{
+    braced, parse_macro_input, token, Field, Ident, ImplItem, ItemImpl, Result, Token, Type,
+};
 
 struct CallbackStruct {
     struct_token: Token![struct],
@@ -44,13 +46,7 @@ pub fn callback_derive(input: TokenStream) -> TokenStream {
     }
 
     if let Some(cbmap_ident) = cbmacro_ident {
-        let expanded = quote! {
-            impl CallbackMap for #name {
-                fn init_callback_map(self: &mut Self) {
-
-                }
-            }
-        };
+        let expanded = quote! {};
 
         TokenStream::from(expanded)
     } else {
@@ -58,12 +54,47 @@ pub fn callback_derive(input: TokenStream) -> TokenStream {
     }
 }
 
+fn generate_map_insert(item: &ImplItem) -> Option<proc_macro2::TokenStream> {
+    match item {
+        ImplItem::Method(method_item) => {
+            let method_name = method_item.sig.ident.clone();
+            Some(quote! {
+                map.insert(stringify!(#method_name).to_string(), Self::#method_name);
+            })
+        }
+        _ => None,
+    }
+}
+
 #[proc_macro_attribute]
-pub fn cursive_callback(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let attr2 = proc_macro2::TokenStream::from(attr);
-    let item2 = proc_macro2::TokenStream::from(item);
+pub fn cursive_callbacks(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let cb_impl = parse_macro_input!(item as ItemImpl);
 
-    let expanded = quote! {};
+    let struct_name = match *cb_impl.self_ty.clone() {
+        Type::Path(tp) => tp.path.get_ident().cloned(),
+        _ => None,
+    };
 
-    TokenStream::from(expanded)
+    let map_inserts = cb_impl.items.iter().map(|item| generate_map_insert(item));
+
+    if let Some(name) = struct_name {
+        let expanded = quote! {
+            #cb_impl
+            impl CallbackMap for #name {
+                fn new() -> Self {
+                    Self {
+                        callbacks: {
+                            let mut map: HashMap<String, fn(&mut Cursive)> = ::std::collections::HashMap::new();
+                            #(#map_inserts)*
+                            map
+                        }
+                    }
+                }
+            }
+        };
+
+        TokenStream::from(expanded)
+    } else {
+        panic!("Not implementing a struct.");
+    }
 }

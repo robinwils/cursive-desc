@@ -10,7 +10,8 @@ name = "cursive_callback_macro"
 proc-macro = true
 
 [dependencies]
+cursive = "*"
 quote = "1.0"
-syn = { version = "1.0.33", features = ["visit"] }
+syn = { version = "1.0.33", features = ["full"] }
 cursive_callback = { path = "../cursive_callback" }
 proc-macro2 = "1.0"
