@@ -5,3 +5,4 @@ authors = ["Robin Wils <robin.wilz@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+cursive = "*"

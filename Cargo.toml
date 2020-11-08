@@ -10,6 +10,7 @@ members = [ "examples", "cursive_callback_macro" ]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 cursive_callback_macro = { path = "cursive_callback_macro" }
+cursive_callback = { path = "cursive_callback" }
 serde = { version = "1.0", features = [ "derive"] }
 serde_json = "*"
 cursive = "*"
