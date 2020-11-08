@@ -9,7 +9,7 @@ use syn::{
     braced, parse_macro_input, token, Field, Ident, ImplItem, ItemImpl, Result, Token, Type,
 };
 
-fn generate_map_insert(item: &ImplItem) -> Option<proc_macro2::TokenStream> {
+fn generate_cb_pattern_match(item: &ImplItem) -> Option<proc_macro2::TokenStream> {
     match item {
         ImplItem::Method(method_item) => {
             let method_name = method_item.sig.ident.clone();
@@ -33,7 +33,7 @@ pub fn cursive_callbacks(attr: TokenStream, item: TokenStream) -> TokenStream {
     let map_inserts = cb_impl
         .items
         .iter()
-        .map(|item| generate_map_insert(item))
+        .map(|item| generate_cb_pattern_match(item))
         .filter(|x| x.is_some());
 
     if let Some(name) = struct_name {
