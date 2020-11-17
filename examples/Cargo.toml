@@ -6,4 +6,7 @@ edition = "2018"
 
 [dependencies]
 cursive_desc = { path = ".." }
+cursive_callback = { path = "../cursive_callback" }
+cursive_callback_macro = { path = "../cursive_callback_macro" }
 cursive = "*"
+log = { version = "*", features = ["max_level_info", "release_max_level_warn"] }

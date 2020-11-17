@@ -1,5 +1,6 @@
 use cursive::views::BoxedView;
 use cursive::View;
+use cursive_callback::CallbackRegistry;
 
 #[cfg(test)]
 mod tests {
@@ -21,18 +22,11 @@ mod utils;
 
 extern crate serde;
 
-macro_rules! hashmap {
-    ($( $key: expr => $val: expr ),*) => {{
-         let mut map = ::std::collections::HashMap::new();
-         $( map.insert($key, $val); )*
-         map
-    }}
-}
+pub fn from_str<M: 'static + CallbackRegistry>(
+    s: &str,
+    callback_registry: M,
+) -> Result<BoxedView, error::Error> {
+    let parser = parser::Parser::new(callback_registry);
 
-pub fn from_str(s: &str) -> Result<BoxedView, error::Error> {
-    let parser: parser::Parser = parser::Parser::new();
-
-    let main_view = parser.parse(s);
-
-    main_view
+    parser.parse(s)
 }
