@@ -27,11 +27,21 @@ pub struct JButton {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct JDialog {
+    content: Option<Box<JView>>,
+    info: Option<String>,
+    title: Option<String>,
+    dismiss: Option<String>,
+    buttons: Option<Vec<JButton>>,
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(tag = "view")]
 pub enum JView {
     TextView(JTextView),
     LinearLayout(JLinearLayout),
     Button(JButton),
+    Dialog(JDialog),
 }
 
 #[derive(Deserialize, Debug, Copy, Clone)]
@@ -109,6 +119,36 @@ where
         )))
     }
 
+    fn new_dialog(&self, dialog: &JDialog) -> Result<BoxedView, Error> {
+        let mut dial = Dialog::new();
+
+        if let Some(title) = &dialog.title {
+            dial.set_title(title);
+        }
+
+        if let Some(dismiss) = &dialog.dismiss {
+            dial = dial.dismiss_button(dismiss);
+        }
+
+        if let Some(content) = &dialog.content {
+            dial.set_content(
+                self.from_jview(content.as_ref())
+                    .expect("cannot parse dialog content"),
+            );
+        }
+
+        if let Some(buttons) = &dialog.buttons {
+            for button in buttons {
+                let reg = self.cb_reg.to_owned();
+                let callback = reg.borrow().get(&button.callback);
+
+                dial.add_button(button.label.to_string(), move |s| {
+                    callback(&reg.borrow(), s)
+                });
+            }
+        }
+
+        Ok(BoxedView::boxed(dial))
     }
 
     pub fn from_jview(&self, jview: &JView) -> Result<BoxedView, Error> {
@@ -116,6 +156,7 @@ where
             JView::TextView(tview) => self.new_text_view(tview),
             JView::LinearLayout(llayout) => self.new_linear_layout(llayout),
             JView::Button(button) => self.new_button(button),
+            JView::Dialog(dialog) => self.new_dialog(dialog),
         }
     }
 
