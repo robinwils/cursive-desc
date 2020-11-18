@@ -9,23 +9,32 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 #[derive(Deserialize, Debug)]
-#[serde(tag = "view")]
-pub enum JView {
-    TextView {
-        content: String,
-        effect: Option<String>,
-    },
-    LinearLayout {
-        orientation: JOrientation,
-        children: Vec<JView>,
-    },
-    Button {
-        label: String,
-        callback: String,
-    },
+pub struct JTextView {
+    content: String,
+    effect: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
+pub struct JLinearLayout {
+    orientation: JOrientation,
+    children: Vec<JView>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct JButton {
+    label: String,
+    callback: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(tag = "view")]
+pub enum JView {
+    TextView(JTextView),
+    LinearLayout(JLinearLayout),
+    Button(JButton),
+}
+
+#[derive(Deserialize, Debug, Copy, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum JOrientation {
     Horizontal,
@@ -56,12 +65,12 @@ where
         }
     }
 
-    fn new_text_view(&self, content: String, effect: Option<String>) -> Result<BoxedView, Error> {
-        println!("Creating TextView: {}, {:?}", content, effect);
+    fn new_text_view(&self, tview: &JTextView) -> Result<BoxedView, Error> {
+        println!("Creating TextView: {}, {:?}", tview.content, tview.effect);
         let mut text_view = TextView::empty();
 
-        text_view.set_content(content);
-        if let Some(estring) = effect {
+        text_view.set_content(tview.content.to_string());
+        if let Some(estring) = &tview.effect {
             text_view
                 .set_effect(effect_from_str(estring.as_str()).expect("cannot convert to effect"));
         }
@@ -69,21 +78,17 @@ where
         Ok(BoxedView::boxed(text_view))
     }
 
-    fn new_linear_layout(
-        &self,
-        orientation: JOrientation,
-        children: Vec<JView>,
-    ) -> Result<BoxedView, Error> {
+    fn new_linear_layout(&self, jlayout: &JLinearLayout) -> Result<BoxedView, Error> {
         println!(
             "Creating LinearLayout: {:?}, {}",
-            orientation,
-            children.len()
+            jlayout.orientation,
+            jlayout.children.len()
         );
-        let mut llayout = LinearLayout::new(orientation.into());
+        let mut llayout = LinearLayout::new(jlayout.orientation.into());
 
-        for child in children {
+        for child in &jlayout.children {
             llayout.add_child(
-                self.from_jview(child)
+                self.from_jview(&child)
                     .expect("cannot parse linear layout children"),
             );
         }
@@ -91,26 +96,26 @@ where
         Ok(BoxedView::boxed(llayout))
     }
 
-    fn new_button(&self, label: String, callback: String) -> Result<BoxedView, Error> {
+    fn new_button(&self, button: &JButton) -> Result<BoxedView, Error> {
         let reg = self.cb_reg.to_owned();
-        let callback = reg.borrow().get(&callback);
+        let callback = reg.borrow().get(&button.callback);
 
         // Button::new requires its second arg to implement Fn<&mut Cursive> + 'static thus
         // the compiler wants the elements used inside the closure must have a 'static lifetime.
         // What this really means is that the closure needs to own all the elements inside of it,
-        Ok(BoxedView::boxed(Button::new(label, move |s| {
-            callback(&reg.borrow(), s)
-        })))
+        Ok(BoxedView::boxed(Button::new(
+            button.label.to_string(),
+            move |s| callback(&reg.borrow(), s),
+        )))
     }
 
-    pub fn from_jview(&self, jview: JView) -> Result<BoxedView, Error> {
+    }
+
+    pub fn from_jview(&self, jview: &JView) -> Result<BoxedView, Error> {
         match jview {
-            JView::TextView { content, effect } => self.new_text_view(content, effect),
-            JView::LinearLayout {
-                orientation,
-                children,
-            } => self.new_linear_layout(orientation, children),
-            JView::Button { label, callback } => self.new_button(label, callback),
+            JView::TextView(tview) => self.new_text_view(tview),
+            JView::LinearLayout(llayout) => self.new_linear_layout(llayout),
+            JView::Button(button) => self.new_button(button),
         }
     }
 
@@ -119,6 +124,6 @@ where
 
         println!("Json deserialized: {:?}", doc);
 
-        self.from_jview(doc)
+        self.from_jview(&doc)
     }
 }
